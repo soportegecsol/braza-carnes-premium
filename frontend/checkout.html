@@ -130,10 +130,14 @@
     const apiOk = await brazaApiHealthy();
 
     if (apiOk) {
-      const customerId = brazaCustomerId();
+      const customer = await brazaApiMe();
+      if (!customer) {
+        window.location.href = 'login.html?next=' + encodeURIComponent('checkout.html');
+        return;
+      }
       let suscripcion;
       try {
-        suscripcion = await brazaApiSuscripcion(customerId);
+        suscripcion = await brazaApiSuscripcion();
       } catch (err) {
         alert('No se pudo consultar el backend: ' + err.message);
       }
@@ -161,7 +165,6 @@
         btnPagar.textContent = 'Procesando pago con Bold...';
         try {
           const pedido = await brazaApiCheckout({
-            customerId,
             suscripcionId: suscripcion.id,
             metodoPago: metodoSel,
           });

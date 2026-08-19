@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="Iniciar sesión — Braza"/>
+<title>Braza — Iniciar sesión</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
+  <div class="navlinks">
+    <a href="index.html" class="hide-mobile">Inicio</a>
+    <a href="registro.html" class="hide-mobile">Crear cuenta</a>
+  </div>
+</nav>
+
+<div class="wrap narrow">
+  <div class="breadcrumb"><a href="index.html">Inicio</a> / Iniciar sesión</div>
+  <div class="page-head">
+    <h1>Inicia sesión</h1>
+    <p>Accede a tu cuenta para gestionar tu suscripción.</p>
+  </div>
+
+  <div id="sin-backend" class="draft-note err" style="display:none;">
+    No hay backend disponible ahora mismo — inicia el servidor (<code>npm start</code> en <code>backend/</code>) para poder iniciar sesión de verdad.
+  </div>
+
+  <div class="card" id="login-card">
+    <form id="form-login">
+      <div id="form-error" class="draft-note err" style="display:none;margin-bottom:18px;"></div>
+      <div class="field">
+        <label for="email">Correo</label>
+        <input type="email" id="email" placeholder="tu@correo.com" required/>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" placeholder="••••••••" required/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-login">Iniciar sesión</button>
+    </form>
+    <p style="margin-top:18px;color:var(--text3);font-size:0.9rem;">
+      ¿No tienes cuenta? <a href="registro.html">Crea una aquí</a>.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="footer">
+    <div class="brand"><span class="brand-mark">◆ BRAZA</span></div>
+    <div>Concepto interno GECSOL — 18 de agosto de 2026</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get('next') || 'panel.html';
+
+  (async function init() {
+    const apiOk = await brazaApiHealthy();
+    if (!apiOk) {
+      document.getElementById('sin-backend').style.display = 'block';
+      document.getElementById('login-card').style.display = 'none';
+      return;
+    }
+    // Si ya hay sesión activa, no tiene sentido mostrar el login de nuevo
+    const customer = await brazaApiMe();
+    if (customer) {
+      window.location.href = next;
+    }
+  })();
+
+  document.getElementById('form-login').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-login');
+    const errorBox = document.getElementById('form-error');
+    errorBox.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+
+    try {
+      await brazaApiLogin({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+      window.location.href = next;
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Iniciar sesión';
+    }
+  });
+</script>
+</body>
+</html>

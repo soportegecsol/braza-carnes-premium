@@ -159,9 +159,13 @@
     const apiOk = await brazaApiHealthy();
 
     if (apiOk) {
+      const customer = await brazaApiMe();
+      if (!customer) {
+        window.location.href = 'login.html?next=' + encodeURIComponent('suscripcion.html?plan=' + planSeleccionado);
+        return;
+      }
       try {
         await brazaApiCrearSuscripcion({
-          customerId: brazaCustomerId(),
           planSlug: planSeleccionado,
           ...datos,
         });

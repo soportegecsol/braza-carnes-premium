@@ -5,7 +5,17 @@ CREATE TABLE IF NOT EXISTS customers (
   id TEXT PRIMARY KEY,
   nombre TEXT,
   telefono TEXT,
+  email TEXT UNIQUE,
+  password_hash TEXT,
+  password_salt TEXT,
   created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  customer_id TEXT NOT NULL REFERENCES customers(id),
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS direcciones (

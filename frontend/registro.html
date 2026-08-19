@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="Crear cuenta — Braza"/>
+<title>Braza — Crear cuenta</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
+  <div class="navlinks">
+    <a href="index.html" class="hide-mobile">Inicio</a>
+    <a href="login.html" class="hide-mobile">Iniciar sesión</a>
+  </div>
+</nav>
+
+<div class="wrap narrow">
+  <div class="breadcrumb"><a href="index.html">Inicio</a> / Crear cuenta</div>
+  <div class="page-head">
+    <h1>Crea tu cuenta</h1>
+    <p>Necesaria para suscribirte y gestionar tus entregas.</p>
+  </div>
+
+  <div id="sin-backend" class="draft-note err" style="display:none;">
+    No hay backend disponible ahora mismo — inicia el servidor (<code>npm start</code> en <code>backend/</code>) para poder crear una cuenta real.
+  </div>
+
+  <div class="card" id="registro-card">
+    <form id="form-registro">
+      <div id="form-error" class="draft-note err" style="display:none;margin-bottom:18px;"></div>
+      <div class="field">
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" placeholder="Tu nombre" required/>
+      </div>
+      <div class="field">
+        <label for="telefono">Teléfono</label>
+        <input type="tel" id="telefono" placeholder="300 000 0000"/>
+      </div>
+      <div class="field">
+        <label for="email">Correo</label>
+        <input type="email" id="email" placeholder="tu@correo.com" required/>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" placeholder="Mínimo 8 caracteres" minlength="8" required/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-registro">Crear cuenta</button>
+    </form>
+    <p style="margin-top:18px;color:var(--text3);font-size:0.9rem;">
+      ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="footer">
+    <div class="brand"><span class="brand-mark">◆ BRAZA</span></div>
+    <div>Concepto interno GECSOL — 18 de agosto de 2026</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get('next') || 'panel.html';
+
+  (async function init() {
+    const apiOk = await brazaApiHealthy();
+    if (!apiOk) {
+      document.getElementById('sin-backend').style.display = 'block';
+      document.getElementById('registro-card').style.display = 'none';
+      return;
+    }
+    const customer = await brazaApiMe();
+    if (customer) {
+      window.location.href = next;
+    }
+  })();
+
+  document.getElementById('form-registro').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-registro');
+    const errorBox = document.getElementById('form-error');
+    errorBox.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Creando cuenta...';
+
+    try {
+      await brazaApiRegistro({
+        nombre: document.getElementById('nombre').value,
+        telefono: document.getElementById('telefono').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+      window.location.href = next;
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Crear cuenta';
+    }
+  });
+</script>
+</body>
+</html>

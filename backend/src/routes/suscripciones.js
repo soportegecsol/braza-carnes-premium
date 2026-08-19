@@ -4,6 +4,11 @@ const { db } = require("../db");
 
 const router = express.Router();
 
+// Nota: todas las rutas de este router pasan por requireAuth (ver app.js),
+// así que req.customerId siempre viene del token verificado, nunca del
+// body/params del cliente — evita que alguien consulte o modifique la
+// suscripción de otra persona con solo cambiar un customerId.
+
 function nextDeliveryDate() {
   const d = new Date();
   d.setMonth(d.getMonth() + 1);
@@ -11,29 +16,25 @@ function nextDeliveryDate() {
   return d.toISOString().slice(0, 10);
 }
 
-function upsertCustomer(customerId, nombre, telefono) {
-  const existing = db.prepare("SELECT id FROM customers WHERE id = ?").get(customerId);
-  if (existing) {
-    db.prepare("UPDATE customers SET nombre = ?, telefono = ? WHERE id = ?").run(
-      nombre || null,
-      telefono || null,
-      customerId
-    );
-  } else {
-    db.prepare(
-      "INSERT INTO customers (id, nombre, telefono, created_at) VALUES (?, ?, ?, ?)"
-    ).run(customerId, nombre || null, telefono || null, new Date().toISOString());
-  }
+function updateCustomerProfile(customerId, nombre, telefono) {
+  if (!nombre && !telefono) return;
+  db.prepare(
+    `UPDATE customers SET
+       nombre = COALESCE(?, nombre),
+       telefono = COALESCE(?, telefono)
+     WHERE id = ?`
+  ).run(nombre || null, telefono || null, customerId);
 }
 
-// POST /api/suscripciones
-// body: { customerId, nombre, telefono, ciudad, direccion, planSlug }
+// POST /api/suscripciones  (requiere sesión)
+// body: { nombre, telefono, ciudad, direccion, planSlug }
 router.post("/", (req, res) => {
-  const { customerId, nombre, telefono, ciudad, direccion, planSlug } = req.body || {};
+  const customerId = req.customerId;
+  const { nombre, telefono, ciudad, direccion, planSlug } = req.body || {};
 
-  if (!customerId || !ciudad || !direccion || !planSlug) {
+  if (!ciudad || !direccion || !planSlug) {
     return res.status(400).json({
-      error: "Faltan campos requeridos: customerId, ciudad, direccion, planSlug",
+      error: "Faltan campos requeridos: ciudad, direccion, planSlug",
     });
   }
 
@@ -42,7 +43,7 @@ router.post("/", (req, res) => {
     return res.status(404).json({ error: `Plan '${planSlug}' no existe o no está activo` });
   }
 
-  upsertCustomer(customerId, nombre, telefono);
+  updateCustomerProfile(customerId, nombre, telefono);
 
   const direccionId = uuid();
   db.prepare(
@@ -67,8 +68,8 @@ router.post("/", (req, res) => {
   });
 });
 
-// GET /api/suscripciones/:customerId — suscripción activa/más reciente del cliente
-router.get("/:customerId", (req, res) => {
+// GET /api/suscripciones — suscripción activa/más reciente del cliente autenticado
+router.get("/", (req, res) => {
   const row = db
     .prepare(
       `SELECT s.id, s.estado, s.proxima_entrega, s.created_at,
@@ -83,7 +84,7 @@ router.get("/:customerId", (req, res) => {
        ORDER BY s.created_at DESC
        LIMIT 1`
     )
-    .get(req.params.customerId);
+    .get(req.customerId);
 
   if (!row) return res.status(404).json({ error: "Sin suscripción para este cliente" });
 
@@ -99,13 +100,13 @@ router.get("/:customerId", (req, res) => {
   });
 });
 
-// POST /api/suscripciones/:customerId/cancelar
-router.post("/:customerId/cancelar", (req, res) => {
+// POST /api/suscripciones/cancelar
+router.post("/cancelar", (req, res) => {
   const row = db
     .prepare(
       `SELECT id FROM suscripciones WHERE customer_id = ? ORDER BY created_at DESC LIMIT 1`
     )
-    .get(req.params.customerId);
+    .get(req.customerId);
 
   if (!row) return res.status(404).json({ error: "Sin suscripción para este cliente" });
 

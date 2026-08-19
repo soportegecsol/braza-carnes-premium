@@ -3,8 +3,8 @@ const { db } = require("../db");
 
 const router = express.Router();
 
-// GET /api/pedidos/:customerId — historial de pedidos del cliente
-router.get("/:customerId", (req, res) => {
+// GET /api/pedidos — historial de pedidos del cliente autenticado (requireAuth en app.js)
+router.get("/", (req, res) => {
   const rows = db
     .prepare(
       `SELECT ped.id, ped.monto_cop, ped.metodo_pago, ped.estado_pago,
@@ -15,7 +15,7 @@ router.get("/:customerId", (req, res) => {
        WHERE ped.customer_id = ?
        ORDER BY ped.created_at DESC`
     )
-    .all(req.params.customerId);
+    .all(req.customerId);
 
   res.json({
     pedidos: rows.map((r) => ({

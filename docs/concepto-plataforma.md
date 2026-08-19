@@ -55,13 +55,13 @@ entrega geolocalizada y una experiencia de compra asistida por IA.
 
 ## Contenido visual
 
-- **Confirmado**: en vez de renders 3D, se usa **fotografía profesional** de
-  los cortes y de la parrilla — más rápido, más económico y se ve más real
-  que un render.
-- **Confirmado explícitamente: nada de imágenes generadas por IA.** Deben ser
-  fotos reales, tomadas por un fotógrafo — no generación de imágenes con IA,
-  porque se nota y le resta credibilidad a la marca.
-- Falta contratar al fotógrafo de producto/gastronomía.
+- **Actualizado (19/08)**: se descarta la fotografía profesional real y el
+  render 3D. Ahora **confirmado: imágenes generadas por IA**, buscando el
+  mayor nivel de realismo posible — que se vean indistinguibles de fotografía
+  profesional real. No se contrata fotógrafo.
+- Pendiente: elegir la herramienta de generación de imágenes con IA y producir
+  el set final (cortes, parrilla, empaque) para reemplazar los placeholders
+  CSS de la landing.
 
 ## Fuera de alcance de este documento
 

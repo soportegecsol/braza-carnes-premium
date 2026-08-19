@@ -23,12 +23,20 @@ datos real), listo para seguir desarrollando sobre él:
 - `docs/concepto-plataforma.md` — qué se definió en la reunión del 18/08.
 - `docs/arquitectura.md` — decisiones técnicas y lo que falta.
 
+- **Autenticación real** (`backend/src/routes/auth.js` + `middleware/auth.js`):
+  registro y login con correo/contraseña (hash con `scrypt`, sin dependencias
+  externas), sesión por token (`Authorization: Bearer <token>`, 30 días de
+  vigencia). Las rutas de suscripciones, checkout y pedidos ahora requieren
+  sesión válida y usan el `customerId` del token, no uno enviado por el
+  navegador. Páginas nuevas: `frontend/login.html` y `frontend/registro.html`.
+  Probado end-to-end en `npm run smoke` (registro, login, credenciales
+  incorrectas, acceso sin token, logout invalida el token, etc.).
+
 **Lo que NO está implementado todavía** (para que no haya sorpresas):
-pago real con Bold (está mockeado, ver `backend/README.md`), autenticación
-con usuario/contraseña (usa un ID de cliente anónimo en el navegador),
-agente de IA de compra, geolocalización real, y Postgres en producción
-(el esquema ya existe pero no se probó contra un servidor real). Cada uno
-tiene su nota explicada en el código y en `backend/README.md`.
+pago real con Bold (está mockeado, ver `backend/README.md`), agente de IA
+de compra, geolocalización real, y Postgres en producción (el esquema ya
+existe pero no se probó contra un servidor real). Cada uno tiene su nota
+explicada en el código y en `backend/README.md`.
 
 ## Cómo correrlo
 
@@ -105,9 +113,9 @@ crea sola al arrancar.
   por ahora).
 - Pasarela de pagos: **integración real con Bold** (pendiente de
   credenciales — por ahora mockeada, ver `backend/README.md`).
-- Contenido visual: **fotografía profesional real** en vez de renders 3D o
-  imágenes generadas por IA (se descarta explícitamente el uso de IA para
-  las fotos finales — deben ser fotos reales tomadas por un fotógrafo).
+- Contenido visual: **actualizado (19/08) — imágenes generadas por IA**,
+  buscando el mayor realismo posible (se descarta la fotografía real y el
+  render 3D). Falta elegir herramienta y producir el set final.
 - Stack del backend: **Node.js/Express + SQLite** (elegido para tener algo
   funcional y probado rápido; migrar a Postgres es un cambio acotado, ver
   `backend/README.md`).
@@ -117,7 +125,6 @@ crea sola al arrancar.
 - Beneficio/incentivo específico de cada nivel de suscripción — sin definir
   por ahora.
 - Credenciales reales de Bold para reemplazar el mock de pagos.
-- Autenticación real (usuario/contraseña) en vez del ID anónimo actual.
 - Proveedor de hosting/cloud para producción.
-- Contratar al fotógrafo de producto/gastronomía para las fotos de los cortes.
+- Elegir herramienta de generación de imágenes con IA y producir el set final.
 - Migrar de SQLite a Postgres si el volumen lo justifica.

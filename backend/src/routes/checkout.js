@@ -5,14 +5,15 @@ const bold = require("../services/bold");
 
 const router = express.Router();
 
-// POST /api/checkout
-// body: { customerId, suscripcionId, metodoPago }
+// POST /api/checkout  (requiere sesión — ver requireAuth en app.js)
+// body: { suscripcionId, metodoPago }
 router.post("/", async (req, res) => {
-  const { customerId, suscripcionId, metodoPago } = req.body || {};
+  const customerId = req.customerId;
+  const { suscripcionId, metodoPago } = req.body || {};
 
-  if (!customerId || !suscripcionId || !metodoPago) {
+  if (!suscripcionId || !metodoPago) {
     return res.status(400).json({
-      error: "Faltan campos requeridos: customerId, suscripcionId, metodoPago",
+      error: "Faltan campos requeridos: suscripcionId, metodoPago",
     });
   }
 

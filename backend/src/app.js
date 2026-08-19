@@ -7,9 +7,11 @@ const { seed } = require("./db/seed");
 
 const planesRoutes = require("./routes/planes");
 const cortesRoutes = require("./routes/cortes");
+const authRoutes = require("./routes/auth");
 const suscripcionesRoutes = require("./routes/suscripciones");
 const checkoutRoutes = require("./routes/checkout");
 const pedidosRoutes = require("./routes/pedidos");
+const { requireAuth } = require("./middleware/auth");
 
 function createApp() {
   init();
@@ -23,9 +25,11 @@ function createApp() {
 
   app.use("/api/planes", planesRoutes);
   app.use("/api/cortes", cortesRoutes);
-  app.use("/api/suscripciones", suscripcionesRoutes);
-  app.use("/api/checkout", checkoutRoutes);
-  app.use("/api/pedidos", pedidosRoutes);
+  app.use("/api/auth", authRoutes);
+  // Rutas protegidas: requieren Authorization: Bearer <token> (ver middleware/auth.js)
+  app.use("/api/suscripciones", requireAuth, suscripcionesRoutes);
+  app.use("/api/checkout", requireAuth, checkoutRoutes);
+  app.use("/api/pedidos", requireAuth, pedidosRoutes);
 
   // Sirve el frontend estático desde el mismo servidor —
   // así "npm start" levanta backend + frontend en un solo puerto.

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="Checkout — Braza"/>
+<title>Braza — Confirmar y pagar</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
+  <div class="navlinks">
+    <a href="index.html" class="hide-mobile">Inicio</a>
+    <a href="panel.html" class="hide-mobile">Mi cuenta</a>
+  </div>
+</nav>
+
+<div class="wrap narrow">
+  <div class="breadcrumb"><a href="index.html">Inicio</a> / <a href="suscripcion.html">Elegir suscripción</a> / Confirmar y pagar</div>
+
+  <!-- Vista: sin plan seleccionado -->
+  <div id="sin-plan" style="display:none;">
+    <div class="page-head">
+      <h1>Aún no has elegido un plan</h1>
+      <p>Vuelve a la página de suscripción para seleccionar tu nivel.</p>
+    </div>
+    <a href="suscripcion.html" class="btn btn-primary">Elegir mi suscripción</a>
+  </div>
+
+  <!-- Vista: checkout -->
+  <div id="checkout-view" style="display:none;">
+    <div class="page-head">
+      <h1>Confirma tu pedido</h1>
+      <p>Revisa el resumen y elige tu método de pago.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <h2 class="section-title" style="font-size:1.1rem;margin-bottom:16px;">Resumen del pedido</h2>
+      <div id="resumen-plan"></div>
+      <div class="summary-row"><span>Entrega</span><b id="resumen-entrega"></b></div>
+      <div class="summary-row"><span>Próxima entrega estimada</span><b id="resumen-fecha"></b></div>
+      <div class="summary-total"><span>Total mensual</span><span id="resumen-total"></span></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title" style="font-size:1.1rem;margin-bottom:8px;">Método de pago</h2>
+      <p class="section-sub" style="margin-bottom:6px;">Checkout procesado con Bold — pasarela colombiana confirmada para esta plataforma.</p>
+      <div class="paymethods" id="paymethods">
+        <div class="paymethod" data-method="nequi"><span class="ico">📱</span>Nequi</div>
+        <div class="paymethod" data-method="daviplata"><span class="ico">💜</span>Daviplata</div>
+        <div class="paymethod" data-method="bancolombia"><span class="ico">🏦</span>Bancolombia</div>
+        <div class="paymethod" data-method="tarjeta"><span class="ico">💳</span>Tarjeta</div>
+      </div>
+
+      <div class="draft-note err" style="margin-bottom:22px;">
+        <b>Nota para Carlos:</b> este selector es solo interfaz — no está conectado a la API real de Bold todavía. Al confirmar, esta demo simula un pago exitoso; el cobro real debe implementarse en el backend antes de salir a producción.
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btn-pagar" disabled>Selecciona un método de pago</button>
+    </div>
+  </div>
+
+  <!-- Vista: confirmación -->
+  <div id="confirm-view" style="display:none;">
+    <div class="page-head">
+      <h1>¡Pedido confirmado! 🔥</h1>
+      <p>Tu suscripción quedó activa (simulación de demo).</p>
+    </div>
+    <div class="card">
+      <div class="summary-row"><span>Número de pedido</span><b id="conf-id"></b></div>
+      <div class="summary-row"><span>Plan</span><b id="conf-plan"></b></div>
+      <div class="summary-row"><span>Próxima entrega</span><b id="conf-fecha"></b></div>
+    </div>
+    <div style="margin-top:22px;">
+      <a href="panel.html" class="btn btn-primary">Ir a mi cuenta</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="footer">
+    <div class="brand"><span class="brand-mark">◆ BRAZA</span></div>
+    <div>Concepto interno GECSOL — 18 de agosto de 2026</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const sinPlan = document.getElementById('sin-plan');
+  const checkoutView = document.getElementById('checkout-view');
+  const confirmView = document.getElementById('confirm-view');
+
+  function renderResumen(planNombre, precio, ciudad, direccion, fecha) {
+    document.getElementById('resumen-plan').innerHTML =
+      '<div class="summary-row"><span>Plan ' + planNombre + '</span><b>' + brazaFormatCOP(precio) + ' / mes</b></div>';
+    document.getElementById('resumen-entrega').textContent = (direccion || '—') + ', ' + (ciudad || '—');
+    document.getElementById('resumen-fecha').textContent = fecha;
+    document.getElementById('resumen-total').textContent = brazaFormatCOP(precio);
+  }
+
+  function activarSelectorMetodo(onPagar) {
+    const methods = document.querySelectorAll('.paymethod');
+    const btnPagar = document.getElementById('btn-pagar');
+    let metodoSel = null;
+    methods.forEach(m => {
+      m.addEventListener('click', () => {
+        methods.forEach(x => x.classList.remove('sel'));
+        m.classList.add('sel');
+        metodoSel = m.dataset.method;
+        btnPagar.disabled = false;
+        btnPagar.textContent = 'Confirmar y pagar con ' + m.textContent.trim();
+      });
+    });
+    btnPagar.addEventListener('click', () => onPagar(metodoSel, btnPagar));
+  }
+
+  function mostrarConfirmacion(orderId, planNombre, fecha) {
+    checkoutView.style.display = 'none';
+    confirmView.style.display = 'block';
+    document.getElementById('conf-id').textContent = orderId;
+    document.getElementById('conf-plan').textContent = planNombre;
+    document.getElementById('conf-fecha').textContent = fecha;
+  }
+
+  (async function init() {
+    const apiOk = await brazaApiHealthy();
+
+    if (apiOk) {
+      const customerId = brazaCustomerId();
+      let suscripcion;
+      try {
+        suscripcion = await brazaApiSuscripcion(customerId);
+      } catch (err) {
+        alert('No se pudo consultar el backend: ' + err.message);
+      }
+
+      if (!suscripcion || suscripcion.estado === 'cancelada') {
+        sinPlan.style.display = 'block';
+        return;
+      }
+
+      checkoutView.style.display = 'block';
+      renderResumen(
+        suscripcion.plan.nombre, suscripcion.plan.precioCop,
+        suscripcion.entrega.ciudad, suscripcion.entrega.direccion,
+        suscripcion.proximaEntrega
+      );
+
+      if (suscripcion.estado === 'activa') {
+        // ya pagó antes — lo mandamos directo a confirmación/panel
+        mostrarConfirmacion('(ya pagado)', suscripcion.plan.nombre, suscripcion.proximaEntrega);
+        return;
+      }
+
+      activarSelectorMetodo(async (metodoSel, btnPagar) => {
+        btnPagar.disabled = true;
+        btnPagar.textContent = 'Procesando pago con Bold...';
+        try {
+          const pedido = await brazaApiCheckout({
+            customerId,
+            suscripcionId: suscripcion.id,
+            metodoPago: metodoSel,
+          });
+          mostrarConfirmacion(pedido.id, suscripcion.plan.nombre, pedido.fechaEntregaEstimada);
+        } catch (err) {
+          alert('El pago no se pudo procesar: ' + err.message);
+          btnPagar.disabled = false;
+        }
+      });
+      return;
+    }
+
+    // Sin backend disponible: modo demo con localStorage
+    const state = brazaGetState();
+    if (!state.plan || !BRAZA_PLANS[state.plan]) {
+      sinPlan.style.display = 'block';
+      return;
+    }
+    checkoutView.style.display = 'block';
+    const plan = BRAZA_PLANS[state.plan];
+    const fecha = brazaNextDeliveryDate();
+    renderResumen(plan.nombre, plan.precio, state.ciudad, state.direccion, fecha);
+
+    activarSelectorMetodo((metodoSel) => {
+      const orderId = brazaGenOrderId();
+      const orders = state.orders || [];
+      orders.push({ id: orderId, plan: plan.id, precio: plan.precio, metodo: metodoSel, fecha: fecha });
+      brazaSetState({ orders: orders, activo: true });
+      mostrarConfirmacion(orderId, plan.nombre, fecha);
+    });
+  })();
+</script>
+</body>
+</html>

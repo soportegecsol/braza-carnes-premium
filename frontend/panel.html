@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="Mi cuenta — Braza"/>
+<title>Braza — Mi cuenta</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
+  <div class="navlinks">
+    <a href="index.html" class="hide-mobile">Inicio</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="breadcrumb"><a href="index.html">Inicio</a> / Mi cuenta</div>
+
+  <!-- Vista: sin suscripción -->
+  <div id="sin-suscripcion" style="display:none;max-width:640px;">
+    <div class="page-head">
+      <h1>Todavía no tienes una suscripción activa</h1>
+      <p>Elige un plan para empezar a recibir cortes premium cada mes.</p>
+    </div>
+    <a href="suscripcion.html" class="btn btn-primary">Elegir mi suscripción</a>
+  </div>
+
+  <!-- Vista: con suscripción -->
+  <div id="con-suscripcion" style="display:none;">
+    <div class="page-head">
+      <h1 id="saludo">Hola</h1>
+      <p>Este es el estado de tu suscripción Braza.</p>
+    </div>
+
+    <div class="panel-grid">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
+          <div>
+            <div style="font-size:0.78rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Plan actual</div>
+            <div style="font-size:1.5rem;font-weight:800;" id="plan-nombre"></div>
+          </div>
+          <span class="status-badge active">Activa</span>
+        </div>
+        <div class="summary-row"><span>Precio mensual</span><b id="plan-precio"></b></div>
+        <div class="summary-row"><span>Ciudad de entrega</span><b id="plan-ciudad"></b></div>
+        <div class="summary-row"><span>Dirección</span><b id="plan-direccion"></b></div>
+        <div class="summary-row"><span>Próxima entrega</span><b id="plan-fecha"></b></div>
+        <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;">
+          <a href="suscripcion.html" class="btn btn-ghost btn-sm">Cambiar de plan</a>
+          <button class="btn btn-ghost btn-sm" id="btn-cancelar">Cancelar suscripción</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:0.78rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Asistente de compra IA</div>
+        <p style="color:var(--text2);font-size:0.9rem;margin-bottom:16px;">Acompaña la selección de cortes y responde preguntas del pedido. Alcance confirmado: solo compra, sin ventas ni marketing.</p>
+        <div class="draft-note" style="margin:0;">
+          <b>Nota:</b> el agente de IA todavía no está integrado — este bloque es un marcador de posición para cuando esté listo.
+        </div>
+      </div>
+    </div>
+
+    <section class="tight">
+      <div class="section-head">
+        <div class="eyebrow">Historial</div>
+        <h2 class="section-title" style="font-size:1.3rem;">Tus pedidos</h2>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="orders">
+          <thead>
+            <tr><th>Pedido</th><th>Plan</th><th>Método de pago</th><th>Entrega</th><th>Valor</th></tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="draft-note">
+      <b>Nota para Carlos:</b> toda la información de esta página viene de localStorage (demo de navegador). Cuando exista backend y autenticación real, este panel debe consumir la API de suscripciones/pedidos definida en <code>docs/arquitectura.md</code>.
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="footer">
+    <div class="brand"><span class="brand-mark">◆ BRAZA</span></div>
+    <div>Concepto interno GECSOL — 18 de agosto de 2026</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const sinSus = document.getElementById('sin-suscripcion');
+  const conSus = document.getElementById('con-suscripcion');
+
+  function pintarOrdenes(rows) {
+    const tbody = document.getElementById('orders-body');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text3);">Sin pedidos todavía</td></tr>';
+    } else {
+      tbody.innerHTML = rows.join('');
+    }
+  }
+
+  (async function init() {
+    const apiOk = await brazaApiHealthy();
+
+    if (apiOk) {
+      const customerId = brazaCustomerId();
+      let suscripcion;
+      try {
+        suscripcion = await brazaApiSuscripcion(customerId);
+      } catch (err) {
+        alert('No se pudo consultar el backend: ' + err.message);
+      }
+
+      if (!suscripcion || suscripcion.estado === 'cancelada') {
+        sinSus.style.display = 'block';
+        return;
+      }
+
+      conSus.style.display = 'block';
+      document.getElementById('saludo').textContent =
+        'Hola' + (suscripcion.cliente.nombre ? ', ' + suscripcion.cliente.nombre.split(' ')[0] : '');
+      document.getElementById('plan-nombre').textContent = suscripcion.plan.nombre;
+      document.getElementById('plan-precio').textContent = brazaFormatCOP(suscripcion.plan.precioCop) + ' / mes';
+      document.getElementById('plan-ciudad').textContent = suscripcion.entrega.ciudad || '—';
+      document.getElementById('plan-direccion').textContent = suscripcion.entrega.direccion || '—';
+      document.getElementById('plan-fecha').textContent = suscripcion.proximaEntrega || '—';
+
+      const pedidos = await brazaApiPedidos(customerId);
+      pintarOrdenes(pedidos.map(o =>
+        '<tr><td>' + o.id.slice(0, 8) + '…</td><td>' + o.plan.nombre + '</td><td>' + o.metodoPago +
+        '</td><td>' + o.fechaEntregaEstimada + '</td><td>' + brazaFormatCOP(o.montoCop) + '</td></tr>'
+      ));
+
+      document.getElementById('btn-cancelar').addEventListener('click', async () => {
+        if (confirm('¿Cancelar tu suscripción?')) {
+          await brazaApiCancelar(customerId);
+          location.reload();
+        }
+      });
+      return;
+    }
+
+    // Sin backend disponible: modo demo con localStorage
+    const state = brazaGetState();
+    if (!state.activo || !state.plan || !BRAZA_PLANS[state.plan]) {
+      sinSus.style.display = 'block';
+      return;
+    }
+    conSus.style.display = 'block';
+    const plan = BRAZA_PLANS[state.plan];
+    document.getElementById('saludo').textContent = 'Hola' + (state.nombre ? ', ' + state.nombre.split(' ')[0] : '');
+    document.getElementById('plan-nombre').textContent = plan.nombre;
+    document.getElementById('plan-precio').textContent = brazaFormatCOP(plan.precio) + ' / mes';
+    document.getElementById('plan-ciudad').textContent = state.ciudad || '—';
+    document.getElementById('plan-direccion').textContent = state.direccion || '—';
+    document.getElementById('plan-fecha').textContent = brazaNextDeliveryDate();
+
+    const orders = state.orders || [];
+    pintarOrdenes(orders.slice().reverse().map(o => {
+      const p = BRAZA_PLANS[o.plan] || { nombre: o.plan };
+      return '<tr><td>' + o.id + '</td><td>' + p.nombre + '</td><td>' + (o.metodo || '—') +
+        '</td><td>' + o.fecha + '</td><td>' + brazaFormatCOP(o.precio) + '</td></tr>';
+    }));
+
+    document.getElementById('btn-cancelar').addEventListener('click', () => {
+      if (confirm('¿Cancelar tu suscripción? (modo demo local)')) {
+        brazaSetState({ activo: false });
+        location.reload();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

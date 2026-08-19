@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="Elige tu suscripción — Braza"/>
+<title>Braza — Elige tu suscripción</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
+  <div class="navlinks">
+    <a href="index.html" class="hide-mobile">Inicio</a>
+    <a href="panel.html" class="hide-mobile">Mi cuenta</a>
+  </div>
+</nav>
+
+<div class="wrap narrow">
+  <div class="breadcrumb"><a href="index.html">Inicio</a> / Elegir suscripción</div>
+  <div class="page-head">
+    <h1>Elige tu nivel de suscripción</h1>
+    <p>Cadencia mensual confirmada. Puedes cambiar de plan más adelante desde tu cuenta.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="tight">
+    <div class="tiers" id="tiers-select">
+      <div class="tier selectable" data-plan="clasica">
+        <div class="name">Clásica</div>
+        <div class="desc">Cortes económicos, misma selección cuidada</div>
+        <div class="cad">Entrega mensual</div>
+        <div class="price">$89.000<span> /mes</span></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Selección de cortes de entrada</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Entrega programada</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Beneficio de suscriptor <span style="color:var(--text3)">(por definir)</span></li>
+        </ul>
+        <div class="cta">Seleccionar</div>
+      </div>
+      <div class="tier feat selectable" data-plan="selecta">
+        <div class="name">Selecta</div>
+        <div class="desc">Cortes seleccionados + rotación mensual</div>
+        <div class="cad">Entrega mensual</div>
+        <div class="price">$159.000<span> /mes</span></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Cortes premium curados</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Prioridad de entrega por zona</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Recomendaciones del asistente de compra IA</li>
+        </ul>
+        <div class="cta">Seleccionar</div>
+      </div>
+      <div class="tier selectable" data-plan="maestra">
+        <div class="name">Maestra</div>
+        <div class="desc">Cortes de autor, disponibilidad limitada</div>
+        <div class="cad">Entrega mensual</div>
+        <div class="price">$249.000<span> /mes</span></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Piezas exclusivas / edición limitada</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Atención prioritaria</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>Beneficio máximo de suscriptor</li>
+        </ul>
+        <div class="cta">Seleccionar</div>
+      </div>
+    </div>
+    <div class="tier-note">Precios de ejemplo — no confirmados en la reunión, ajustar antes de producción.</div>
+  </section>
+</div>
+
+<div class="wrap narrow">
+  <section class="tight">
+    <div class="card">
+      <h2 class="section-title" style="font-size:1.3rem;margin-bottom:20px;">Datos de entrega</h2>
+      <form id="form-entrega">
+        <div class="field">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" placeholder="Tu nombre" required/>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="ciudad">Ciudad</label>
+            <select id="ciudad" required>
+              <option value="">Selecciona tu ciudad</option>
+              <option>Bogotá</option>
+              <option>Medellín</option>
+              <option>Cali</option>
+              <option>Barranquilla</option>
+              <option>Bucaramanga</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="telefono">Teléfono</label>
+            <input type="tel" id="telefono" placeholder="300 000 0000" required/>
+          </div>
+        </div>
+        <div class="field">
+          <label for="direccion">Dirección de entrega</label>
+          <input type="text" id="direccion" placeholder="Calle, número, barrio" required/>
+        </div>
+
+        <div class="draft-note" style="margin-top:10px;margin-bottom:24px;">
+          <b>Nota:</b> la cobertura por ciudad todavía no está definida (pendiente de geoposicionamiento). Este formulario no valida disponibilidad real todavía.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="btn-continuar" disabled>Selecciona un plan para continuar</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <div class="footer">
+    <div class="brand"><span class="brand-mark">◆ BRAZA</span></div>
+    <div>Concepto interno GECSOL — 18 de agosto de 2026</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const tiers = document.querySelectorAll('#tiers-select .tier');
+  const btnContinuar = document.getElementById('btn-continuar');
+  let planSeleccionado = null;
+
+  // preselección por query string (?plan=selecta) desde la landing
+  const params = new URLSearchParams(window.location.search);
+  const planUrl = params.get('plan');
+
+  function seleccionarPlan(el){
+    tiers.forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    planSeleccionado = el.dataset.plan;
+    btnContinuar.disabled = false;
+    btnContinuar.textContent = 'Continuar al pago — Plan ' + BRAZA_PLANS[planSeleccionado].nombre;
+  }
+
+  tiers.forEach(t => {
+    t.addEventListener('click', () => seleccionarPlan(t));
+    if (planUrl && t.dataset.plan === planUrl) seleccionarPlan(t);
+  });
+
+  document.getElementById('form-entrega').addEventListener('submit', async function(e){
+    e.preventDefault();
+    if (!planSeleccionado) return;
+
+    const datos = {
+      nombre: document.getElementById('nombre').value,
+      ciudad: document.getElementById('ciudad').value,
+      telefono: document.getElementById('telefono').value,
+      direccion: document.getElementById('direccion').value,
+    };
+
+    btnContinuar.disabled = true;
+    btnContinuar.textContent = 'Guardando...';
+
+    const apiOk = await brazaApiHealthy();
+
+    if (apiOk) {
+      try {
+        await brazaApiCrearSuscripcion({
+          customerId: brazaCustomerId(),
+          planSlug: planSeleccionado,
+          ...datos,
+        });
+        window.location.href = 'checkout.html';
+        return;
+      } catch (err) {
+        alert('No se pudo crear la suscripción en el backend: ' + err.message);
+        btnContinuar.disabled = false;
+        btnContinuar.textContent = 'Continuar al pago';
+        return;
+      }
+    }
+
+    // Sin backend disponible: modo demo con localStorage (abierto por doble clic)
+    brazaSetState({ plan: planSeleccionado, ...datos });
+    window.location.href = 'checkout.html';
+  });
+</script>
+</body>
+</html>

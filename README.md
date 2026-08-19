@@ -31,12 +31,24 @@ datos real), listo para seguir desarrollando sobre él:
   navegador. Páginas nuevas: `frontend/login.html` y `frontend/registro.html`.
   Probado end-to-end en `npm run smoke` (registro, login, credenciales
   incorrectas, acceso sin token, logout invalida el token, etc.).
+- **Roles y panel de administración**: cada cuenta tiene un rol
+  (`cliente` / `admin` / `superadmin`). `soporte@gecsol.co` se promueve
+  automáticamente a superadmin. Panel real en `frontend/admin.html`:
+  inventario editable (stock/merma), lista de clientes, suscripciones y
+  pedidos, y KPIs (clientes, suscripciones activas, ingresos, stock bajo).
+- **Asistente de compra**: `frontend/panel.html` tiene un chat funcional
+  contra `/api/asistente/recomendar` — responde por reglas sobre datos
+  reales (disponibilidad, plan, próxima entrega). No es un LLM generativo
+  todavía — ver `backend/README.md` para el detalle de ese límite.
+- **Seguridad reforzada**: cabeceras `helmet`, rate limiting en login y
+  registro (fuerza bruta), validación de formato de correo.
 
 **Lo que NO está implementado todavía** (para que no haya sorpresas):
-pago real con Bold (está mockeado, ver `backend/README.md`), agente de IA
-de compra, geolocalización real, y Postgres en producción (el esquema ya
-existe pero no se probó contra un servidor real). Cada uno tiene su nota
-explicada en el código y en `backend/README.md`.
+pago real con Bold (está mockeado, ver `backend/README.md`), asistente con
+LLM real (requiere API key de pago), geolocalización real, y Postgres en
+producción (el esquema ya existe pero no se probó contra un servidor
+real). Cada uno tiene su nota explicada en el código y en
+`backend/README.md`.
 
 ## Cómo correrlo
 
@@ -122,9 +134,18 @@ crea sola al arrancar.
 
 ## Pendientes abiertos
 
+**Requieren comprar/contratar algo (fuera de mi alcance hasta que se decida):**
+- Credenciales reales de Bold para reemplazar el mock de pagos.
+- API key de un LLM real (Claude/GPT) si se quiere un asistente de compra
+  conversacional en vez del motor de reglas actual.
+- Proveedor de hosting/cloud para producción.
+- Herramienta de generación de imágenes con IA para el set final (hoy hay
+  fotos de stock reales como stopgap, ver `frontend/index.html`).
+
+**No requieren pago, son decisión de negocio:**
 - Beneficio/incentivo específico de cada nivel de suscripción — sin definir
   por ahora.
-- Credenciales reales de Bold para reemplazar el mock de pagos.
-- Proveedor de hosting/cloud para producción.
-- Elegir herramienta de generación de imágenes con IA y producir el set final.
+
+**Técnico, sin urgencia:**
 - Migrar de SQLite a Postgres si el volumen lo justifica.
+- Restringir CORS a un dominio real antes de producción.

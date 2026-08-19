@@ -22,6 +22,20 @@ function init() {
     "utf8"
   );
   db.exec(schema);
+  migrate();
+}
+
+// Migraciones defensivas para bases de datos que ya existían antes de un
+// cambio de esquema (CREATE TABLE IF NOT EXISTS no agrega columnas nuevas
+// a una tabla que ya existe). Cada ALTER va en su propio try/catch porque
+// SQLite no soporta "ADD COLUMN IF NOT EXISTS".
+function migrate() {
+  const columnExists = (table, column) =>
+    db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === column);
+
+  if (!columnExists("customers", "rol")) {
+    db.exec("ALTER TABLE customers ADD COLUMN rol TEXT NOT NULL DEFAULT 'cliente'");
+  }
 }
 
 module.exports = { db, init };

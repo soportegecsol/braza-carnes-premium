@@ -29,15 +29,48 @@ sale bien imprime `✅ SMOKE TEST OK`.
 ## Qué SÍ está implementado
 
 - `GET /api/planes` — catálogo de los 3 planes.
-- `GET /api/cortes` — catálogo de cortes + inventario/stock.
-- `POST /api/suscripciones` — crea cliente + dirección + suscripción.
-- `GET /api/suscripciones/:customerId` — suscripción actual del cliente.
-- `POST /api/suscripciones/:customerId/cancelar`
+- `GET /api/cortes` — catálogo de cortes + inventario/stock (público).
+- `POST /api/auth/registro`, `/login`, `/logout`, `GET /api/auth/me` —
+  autenticación real por sesión (token, 30 días).
+- `POST /api/suscripciones`, `GET /api/suscripciones`, `POST /cancelar`.
 - `POST /api/checkout` — cobra (mock) y crea el pedido.
-- `GET /api/pedidos/:customerId` — historial de pedidos.
+- `GET /api/pedidos` — historial de pedidos del cliente autenticado.
+- `POST /api/asistente/recomendar` — asistente de compra (ver nota abajo).
+- `GET/PATCH /api/admin/inventario`, `GET /api/admin/clientes`,
+  `PATCH /api/admin/clientes/:id/rol` (solo superadmin),
+  `GET /api/admin/suscripciones`, `GET /api/admin/pedidos`,
+  `GET /api/admin/resumen` — panel de administración (ver nota abajo).
+- **Roles y superadministrador**: cada cuenta tiene `rol`
+  (`cliente` | `admin` | `superadmin`). El correo `soporte@gecsol.co` se
+  promueve automáticamente a `superadmin` al registrarse o iniciar sesión
+  (configurable por `.env`, variable `SUPERADMIN_EMAILS`, separados por
+  coma si hay más de uno). Panel visible en `frontend/admin.html`.
+- **Seguridad**: `helmet` (cabeceras de seguridad estándar), rate limiting
+  en `/api/auth/registro` y `/api/auth/login` (20 intentos / 15 min por
+  IP, mitiga fuerza bruta), validación de formato de correo, contraseñas
+  con `scrypt` + salt (ya existía). Todo con paquetes npm gratuitos, sin
+  ningún servicio de pago.
+- **Inventario**: ya no es solo lectura — el panel admin permite ajustar
+  `stock` y `merma` por corte (`PATCH /api/admin/inventario/:corteId`), y
+  el resumen (`/api/admin/resumen`) marca los cortes con stock ≤ 15.
 
 Todo persiste en una base SQLite real (`backend/data/braza.db`, se crea
 sola al arrancar — está en `.gitignore`, no se sube a git).
+
+## Asistente de compra — alcance real (importante)
+
+El endpoint `/api/asistente/recomendar` responde con **reglas
+determinísticas sobre los datos reales** (stock, tu plan actual, tu
+próxima entrega) — recomienda el corte con más disponibilidad, sugiere un
+plan según si ya tienes suscripción, y dice cuándo llega tu pedido. Cubre
+el alcance que se definió en la reunión del 18/08 ("solo asistente de
+compra, sin ventas ni marketing") sin depender de ningún servicio externo.
+
+Lo que esto **no** es: un modelo de lenguaje generativo tipo Claude/GPT
+que entienda lenguaje natural libre. Conectar un LLM real es un cambio
+acotado (un solo archivo, `src/routes/asistente.js`), pero requiere una
+API key de pago — igual que Bold, queda pendiente de esa decisión de
+compra, no de trabajo de desarrollo.
 
 ## Qué NO está implementado todavía (honesto, sin inflar)
 
@@ -45,10 +78,8 @@ sola al arrancar — está en `.gitignore`, no se sube a git).
   credenciales ni documentación de la API de Bold en este entorno. El
   contrato de la función ya está pensado para que conectar la API real
   sea un cambio aislado a ese archivo.
-- **Autenticación real** (login/registro con contraseña): por ahora cada
-  navegador tiene un `customerId` anónimo persistente en `localStorage`
-  (ver `frontend/js/app.js`, función `brazaCustomerId()`). Suficiente para
-  la demo; para producción hay que agregar auth real.
+- **Asistente con LLM real**: ver nota arriba — hoy es un motor de reglas,
+  no un modelo generativo. Requiere API key de pago.
 - **Redis**: no se usa. Con JWT/sesión no había necesidad real de caché de
   sesión en este MVP; si se necesita más adelante por volumen, se agrega.
 - **Postgres**: el esquema equivalente ya existe en
@@ -57,11 +88,12 @@ sola al arrancar — está en `.gitignore`, no se sube a git).
   SQLite a Postgres implica escribir un adaptador en `src/db/index.js`
   que use `pg` en vez de `better-sqlite3` — el resto del código (rutas,
   lógica) no debería cambiar porque las consultas son SQL estándar.
-- **Agente de IA de compra**: no implementado, es un marcador de posición
-  en el panel del frontend.
 - **Geolocalización real** (zonas de cobertura, mapa de calor): no
   implementada — el formulario de suscripción solo guarda ciudad/dirección
   como texto libre.
+- **CORS abierto** (`cors()` sin restricción de origen): correcto para
+  desarrollo/demo; antes de producción real hay que restringirlo al
+  dominio final del sitio.
 
 ## Estructura
 

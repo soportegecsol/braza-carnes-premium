@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="Panel de administración — Braza"/>
+<title>Braza — Panel admin</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  .admin-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+  .admin-table th{text-align:left;color:var(--text3);text-transform:uppercase;font-size:0.72rem;letter-spacing:0.5px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .admin-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text2);}
+  .admin-table input{width:70px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:5px 8px;color:var(--text1);font-size:0.85rem;}
+  .admin-section{margin-bottom:36px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:32px;}
+  .kpi-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;}
+  .kpi-card .n{font-size:1.6rem;font-weight:800;color:var(--text1);}
+  .kpi-card .l{font-size:0.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;}
+  .stock-low{color:#ff8a5c;font-weight:700;}
+  .rol-badge{font-size:0.72rem;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.08);}
+  .rol-badge.superadmin{background:rgba(255,90,46,0.2);color:#ff9d70;}
+  .rol-badge.admin{background:rgba(255,200,90,0.15);color:#ffce7a;}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="grain"></div>
+
+<nav class="nav">
+  <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
+  <div class="navlinks">
+    <a href="panel.html" class="hide-mobile">Mi cuenta</a>
+    <a href="index.html" class="hide-mobile">Inicio</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="breadcrumb"><a href="panel.html">Mi cuenta</a> / Panel admin</div>
+
+  <div id="sin-permiso" style="display:none;max-width:640px;">
+    <div class="page-head">
+      <h1>No tienes acceso a esta sección</h1>
+      <p>Esta cuenta no tiene rol de administrador. Si crees que debería tenerlo, contacta al superadministrador.</p>
+    </div>
+    <a href="panel.html" class="btn btn-ghost">Volver a mi cuenta</a>
+  </div>
+
+  <div id="admin-body" style="display:none;">
+    <div class="page-head">
+      <h1>Panel de administración</h1>
+      <p id="admin-rol-nota" style="color:var(--text3);font-size:0.85rem;"></p>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <section class="admin-section">
+      <div class="section-head">
+        <div class="eyebrow">Inventario</div>
+        <h2 class="section-title" style="font-size:1.2rem;">Cortes y stock</h2>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="admin-table">
+          <thead><tr><th>Corte</th><th>SKU</th><th>Stock</th><th>Merma</th><th>Actualizado</th><th></th></tr></thead>
+          <tbody id="inv-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-head">
+        <div class="eyebrow">Clientes</div>
+        <h2 class="section-title" style="font-size:1.2rem;">Cuentas registradas</h2>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="admin-table">
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Desde</th></tr></thead>
+          <tbody id="clientes-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-head">
+        <div class="eyebrow">Suscripciones</div>
+        <h2 class="section-title" style="font-size:1.2rem;">Todas las suscripciones</h2>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="admin-table">
+          <thead><tr><th>Cliente</th><th>Plan</th><th>Estado</th><th>Ciudad</th><th>Próxima entrega</th></tr></thead>
+          <tbody id="sus-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <div class="section-head">
+        <div class="eyebrow">Pedidos</div>
+        <h2 class="section-title" style="font-size:1.2rem;">Todos los pedidos</h2>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="admin-table">
+          <thead><tr><th>Cliente</th><th>Plan</th><th>Método</th><th>Estado pago</th><th>Valor</th><th>Fecha</th></tr></thead>
+          <tbody id="ped-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="draft-note">
+      <b>Nota:</b> este panel consume <code>/api/admin/*</code>, protegido por rol (admin/superadmin). Cambiar el rol de otra cuenta requiere ser superadmin (endpoint <code>PATCH /api/admin/clientes/:id/rol</code>, no expuesto aquí todavía como UI — se puede agregar cuando haya más de un administrador real).
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="footer">
+    <div class="brand"><span class="brand-mark">◆ BRAZA</span></div>
+    <div>Concepto interno GECSOL — 18 de agosto de 2026</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  function fmtFecha(s) {
+    if (!s) return '—';
+    try { return new Date(s).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }); }
+    catch (e) { return s; }
+  }
+
+  (async function init() {
+    const apiOk = await brazaApiHealthy();
+    if (!apiOk) {
+      document.getElementById('sin-permiso').style.display = 'block';
+      document.getElementById('sin-permiso').querySelector('p').textContent =
+        'No hay backend disponible ahora mismo — inicia el servidor (npm start en backend/).';
+      return;
+    }
+
+    const customer = await brazaApiMe();
+    if (!customer) {
+      window.location.href = 'login.html?next=' + encodeURIComponent('admin.html');
+      return;
+    }
+    if (customer.rol !== 'admin' && customer.rol !== 'superadmin') {
+      document.getElementById('sin-permiso').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('admin-body').style.display = 'block';
+    document.getElementById('admin-rol-nota').textContent =
+      'Conectado como ' + customer.email + ' — rol: ' + customer.rol;
+
+    try {
+      const resumen = await brazaAdminResumen();
+      const kpis = [
+        { n: resumen.clientes, l: 'Clientes' },
+        { n: resumen.suscripcionesActivas, l: 'Suscripciones activas' },
+        { n: resumen.pedidosAprobados, l: 'Pedidos aprobados' },
+        { n: brazaFormatCOP(resumen.ingresosAprobadosCop), l: 'Ingresos aprobados' },
+      ];
+      document.getElementById('kpi-grid').innerHTML = kpis.map(k =>
+        '<div class="kpi-card"><div class="n">' + k.n + '</div><div class="l">' + k.l + '</div></div>'
+      ).join('');
+
+      if (resumen.stockBajo.length) {
+        document.getElementById('kpi-grid').innerHTML +=
+          '<div class="kpi-card"><div class="n stock-low">' + resumen.stockBajo.length +
+          '</div><div class="l">Cortes con stock bajo (≤15)</div></div>';
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    // Inventario (editable)
+    const inventario = await brazaAdminInventario();
+    document.getElementById('inv-body').innerHTML = inventario.map(c => `
+      <tr data-id="${c.id}">
+        <td>${c.nombre}</td>
+        <td>${c.sku || '—'}</td>
+        <td><input type="number" min="0" class="inp-stock" value="${c.stock}"/></td>
+        <td><input type="number" min="0" class="inp-merma" value="${c.merma}"/></td>
+        <td>${fmtFecha(c.updated_at)}</td>
+        <td><button class="btn btn-ghost btn-sm btn-guardar">Guardar</button></td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('.btn-guardar').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tr = btn.closest('tr');
+        const id = tr.dataset.id;
+        const stock = parseInt(tr.querySelector('.inp-stock').value, 10);
+        const merma = parseInt(tr.querySelector('.inp-merma').value, 10);
+        btn.textContent = 'Guardando...';
+        btn.disabled = true;
+        try {
+          await brazaAdminActualizarInventario(id, { stock, merma });
+          btn.textContent = 'Guardado ✓';
+        } catch (err) {
+          btn.textContent = 'Error';
+          alert(err.message);
+        }
+        setTimeout(() => { btn.textContent = 'Guardar'; btn.disabled = false; }, 1500);
+      });
+    });
+
+    // Clientes
+    const clientes = await brazaAdminClientes();
+    document.getElementById('clientes-body').innerHTML = clientes.map(c => `
+      <tr>
+        <td>${c.nombre || '—'}</td>
+        <td>${c.email}</td>
+        <td>${c.telefono || '—'}</td>
+        <td><span class="rol-badge ${c.rol}">${c.rol}</span></td>
+        <td>${fmtFecha(c.created_at)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="5">Sin clientes todavía</td></tr>';
+
+    // Suscripciones
+    const suscripciones = await brazaAdminSuscripciones();
+    document.getElementById('sus-body').innerHTML = suscripciones.map(s => `
+      <tr>
+        <td>${s.cliente_nombre || s.cliente_email}</td>
+        <td>${s.plan_nombre}</td>
+        <td>${s.estado}</td>
+        <td>${s.ciudad}</td>
+        <td>${s.proxima_entrega || '—'}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="5">Sin suscripciones todavía</td></tr>';
+
+    // Pedidos
+    const pedidos = await brazaAdminPedidos();
+    document.getElementById('ped-body').innerHTML = pedidos.map(p => `
+      <tr>
+        <td>${p.cliente_nombre || p.cliente_email}</td>
+        <td>${p.plan_nombre}</td>
+        <td>${p.metodo_pago}</td>
+        <td>${p.estado_pago}</td>
+        <td>${brazaFormatCOP(p.monto_cop)}</td>
+        <td>${fmtFecha(p.created_at)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="6">Sin pedidos todavía</td></tr>';
+  })();
+</script>
+</body>
+</html>

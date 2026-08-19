@@ -20,8 +20,27 @@ function createSession(customerId) {
 }
 
 function publicCustomer(row) {
-  return { id: row.id, nombre: row.nombre, telefono: row.telefono, email: row.email };
+  return { id: row.id, nombre: row.nombre, telefono: row.telefono, email: row.email, rol: row.rol };
 }
+
+// Correos que se promueven automáticamente a superadmin al registrarse o
+// iniciar sesión. Configurable por .env (SUPERADMIN_EMAILS separados por
+// coma); por defecto incluye la cuenta de soporte de GECSOL.
+const SUPERADMIN_EMAILS = (process.env.SUPERADMIN_EMAILS || "soporte@gecsol.co")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+function promoverSiAplica(customer) {
+  if (customer.rol === "superadmin") return customer;
+  if (SUPERADMIN_EMAILS.includes((customer.email || "").toLowerCase())) {
+    db.prepare("UPDATE customers SET rol = 'superadmin' WHERE id = ?").run(customer.id);
+    return { ...customer, rol: "superadmin" };
+  }
+  return customer;
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // POST /api/auth/registro
 // body: { nombre, telefono, email, password }
@@ -30,6 +49,9 @@ router.post("/registro", (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ error: "Faltan campos requeridos: email, password" });
+  }
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ error: "El correo no tiene un formato válido" });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
@@ -48,7 +70,8 @@ router.post("/registro", (req, res) => {
   ).run(customerId, nombre || null, telefono || null, email, hash, salt, new Date().toISOString());
 
   const token = createSession(customerId);
-  const customer = db.prepare("SELECT id, nombre, telefono, email FROM customers WHERE id = ?").get(customerId);
+  let customer = db.prepare("SELECT id, nombre, telefono, email, rol FROM customers WHERE id = ?").get(customerId);
+  customer = promoverSiAplica(customer);
 
   res.status(201).json({ token, customer: publicCustomer(customer) });
 });
@@ -73,7 +96,8 @@ router.post("/login", (req, res) => {
   }
 
   const token = createSession(customer.id);
-  res.json({ token, customer: publicCustomer(customer) });
+  const promovido = promoverSiAplica(customer);
+  res.json({ token, customer: publicCustomer(promovido) });
 });
 
 // POST /api/auth/logout — requiere sesión activa
@@ -87,7 +111,7 @@ router.post("/logout", requireAuth, (req, res) => {
 // GET /api/auth/me — requiere sesión activa
 router.get("/me", requireAuth, (req, res) => {
   const customer = db
-    .prepare("SELECT id, nombre, telefono, email FROM customers WHERE id = ?")
+    .prepare("SELECT id, nombre, telefono, email, rol FROM customers WHERE id = ?")
     .get(req.customerId);
   if (!customer) return res.status(404).json({ error: "Cliente no encontrado" });
   res.json({ customer: publicCustomer(customer) });

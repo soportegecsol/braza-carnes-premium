@@ -214,3 +214,60 @@ async function brazaApiCancelar() {
   const r = await fetch("/api/suscripciones/cancelar", { method: "POST", headers: brazaAuthHeaders() });
   return r.ok;
 }
+
+async function brazaApiAsistente(mensaje) {
+  const r = await fetch("/api/asistente/recomendar", {
+    method: "POST",
+    headers: brazaAuthHeaders(),
+    body: JSON.stringify({ mensaje }),
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || "El asistente no pudo responder");
+  return j;
+}
+
+/* ============================================================
+   Admin — solo para cuentas con rol admin/superadmin. Todas
+   estas llamadas fallan con 403 si la sesión no tiene el rol.
+   ============================================================ */
+
+async function brazaAdminResumen() {
+  const r = await fetch("/api/admin/resumen", { headers: brazaAuthHeaders() });
+  if (!r.ok) throw new Error((await r.json()).error || "Sin permisos");
+  return r.json();
+}
+
+async function brazaAdminInventario() {
+  const r = await fetch("/api/admin/inventario", { headers: brazaAuthHeaders() });
+  if (!r.ok) throw new Error((await r.json()).error || "Sin permisos");
+  return (await r.json()).cortes;
+}
+
+async function brazaAdminActualizarInventario(corteId, patch) {
+  const r = await fetch("/api/admin/inventario/" + corteId, {
+    method: "PATCH",
+    headers: brazaAuthHeaders(),
+    body: JSON.stringify(patch),
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || "No se pudo actualizar");
+  return j.corte;
+}
+
+async function brazaAdminClientes() {
+  const r = await fetch("/api/admin/clientes", { headers: brazaAuthHeaders() });
+  if (!r.ok) throw new Error((await r.json()).error || "Sin permisos");
+  return (await r.json()).clientes;
+}
+
+async function brazaAdminSuscripciones() {
+  const r = await fetch("/api/admin/suscripciones", { headers: brazaAuthHeaders() });
+  if (!r.ok) throw new Error((await r.json()).error || "Sin permisos");
+  return (await r.json()).suscripciones;
+}
+
+async function brazaAdminPedidos() {
+  const r = await fetch("/api/admin/pedidos", { headers: brazaAuthHeaders() });
+  if (!r.ok) throw new Error((await r.json()).error || "Sin permisos");
+  return (await r.json()).pedidos;
+}

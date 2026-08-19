@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS customers (
   email TEXT UNIQUE,
   password_hash TEXT,
   password_salt TEXT,
+  rol TEXT NOT NULL DEFAULT 'cliente', -- cliente | admin | superadmin
   created_at TEXT NOT NULL
 );
 

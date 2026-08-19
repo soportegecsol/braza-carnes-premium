@@ -144,6 +144,83 @@ async function main() {
     // 18. frontend servido estáticamente
     const frontendRes = await fetch(`${BASE}/index.html`);
     check("GET /index.html sirve el frontend estático", frontendRes.status === 200);
+
+    // 19. un cliente normal no puede entrar al panel admin
+    const registro2Res = await fetch(`${BASE}/api/auth/registro`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: `smoke2-${Date.now()}@braza.test`, password: "clave-de-prueba-123" }),
+    });
+    const registro2Body = await registro2Res.json();
+    check("Cliente normal se registra con rol 'cliente'", registro2Body.customer.rol === "cliente");
+    const authHeaders2 = { "Content-Type": "application/json", Authorization: `Bearer ${registro2Body.token}` };
+    const inventarioSinPermiso = await fetch(`${BASE}/api/admin/inventario`, { headers: authHeaders2 });
+    check("GET /api/admin/inventario sin rol admin responde 403", inventarioSinPermiso.status === 403);
+
+    // 20. el correo de SUPERADMIN_EMAILS se promueve automáticamente
+    const superEmail = "soporte@gecsol.co";
+    const yaExiste = await fetch(`${BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: superEmail, password: "clave-super-123456" }),
+    });
+    let superToken;
+    if (yaExiste.status === 401) {
+      const superRegistro = await fetch(`${BASE}/api/auth/registro`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: superEmail, password: "clave-super-123456" }),
+      });
+      const superBody = await superRegistro.json();
+      check(`Registro de ${superEmail} queda como superadmin`, superBody.customer.rol === "superadmin");
+      superToken = superBody.token;
+    } else {
+      const superBody = await yaExiste.json();
+      check(`Login de ${superEmail} queda como superadmin`, superBody.customer.rol === "superadmin");
+      superToken = superBody.token;
+    }
+    const superHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${superToken}` };
+
+    // 21. panel admin — inventario visible y editable
+    const invAdminRes = await fetch(`${BASE}/api/admin/inventario`, { headers: superHeaders });
+    const invAdminBody = await invAdminRes.json();
+    check("GET /api/admin/inventario responde 200 para superadmin", invAdminRes.status === 200);
+    check("Inventario admin trae 4 cortes", invAdminBody.cortes.length === 4);
+
+    const primerCorte = invAdminBody.cortes[0];
+    const patchRes = await fetch(`${BASE}/api/admin/inventario/${primerCorte.id}`, {
+      method: "PATCH",
+      headers: superHeaders,
+      body: JSON.stringify({ stock: 5, merma: 2 }),
+    });
+    const patchBody = await patchRes.json();
+    check("PATCH inventario actualiza stock/merma", patchBody.corte.stock === 5 && patchBody.corte.merma === 2);
+
+    // 22. panel admin — resumen, clientes, suscripciones, pedidos
+    const resumenRes = await fetch(`${BASE}/api/admin/resumen`, { headers: superHeaders });
+    const resumenBody = await resumenRes.json();
+    check("GET /api/admin/resumen responde 200", resumenRes.status === 200);
+    check("Resumen incluye stockBajo (corte con stock=5)", resumenBody.stockBajo.some((c) => c.stock === 5));
+
+    const clientesRes = await fetch(`${BASE}/api/admin/clientes`, { headers: superHeaders });
+    check("GET /api/admin/clientes responde 200", clientesRes.status === 200);
+
+    // 23. asistente de compra — recomienda corte, plan y entrega
+    // (usa authHeaders2: el cliente del punto 19, cuya sesión sigue activa —
+    // la del cliente original ya se cerró en el punto 17)
+    const asistCorte = await fetch(`${BASE}/api/asistente/recomendar`, {
+      method: "POST",
+      headers: authHeaders2,
+      body: JSON.stringify({ mensaje: "qué corte tiene disponibilidad" }),
+    }).then((r) => r.json());
+    check("Asistente responde sobre disponibilidad de cortes", typeof asistCorte.respuesta === "string" && asistCorte.respuesta.length > 0);
+
+    const asistPlan = await fetch(`${BASE}/api/asistente/recomendar`, {
+      method: "POST",
+      headers: authHeaders2,
+      body: JSON.stringify({ mensaje: "qué plan me recomiendas" }),
+    }).then((r) => r.json());
+    check("Asistente responde sobre planes", asistPlan.sugerencia && asistPlan.sugerencia.tipo === "plan");
   } catch (err) {
     console.error("ERROR durante el smoke test:", err);
     failed = true;

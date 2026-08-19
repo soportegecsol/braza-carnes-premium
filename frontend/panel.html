@@ -58,10 +58,15 @@
       </div>
 
       <div class="card">
-        <div style="font-size:0.78rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Asistente de compra IA</div>
-        <p style="color:var(--text2);font-size:0.9rem;margin-bottom:16px;">Acompaña la selección de cortes y responde preguntas del pedido. Alcance confirmado: solo compra, sin ventas ni marketing.</p>
-        <div class="draft-note" style="margin:0;">
-          <b>Nota:</b> el agente de IA todavía no está integrado — este bloque es un marcador de posición para cuando esté listo.
+        <div style="font-size:0.78rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Asistente de compra</div>
+        <p style="color:var(--text2);font-size:0.9rem;margin-bottom:16px;">Pregúntale por disponibilidad de cortes, qué plan te conviene o cuándo llega tu entrega.</p>
+        <div id="asistente-log" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:180px;overflow-y:auto;"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="asistente-input" placeholder="¿Qué corte tiene más disponibilidad?" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;color:var(--text1);font-size:0.88rem;"/>
+          <button class="btn btn-ghost btn-sm" id="btn-asistente">Preguntar</button>
+        </div>
+        <div class="draft-note" style="margin-top:14px;">
+          <b>Nota:</b> este asistente responde con reglas sobre los datos reales (stock, tu plan, tu entrega) — no es un modelo de lenguaje generativo. Conectar un LLM real es posible más adelante y requiere una API key de pago.
         </div>
       </div>
     </div>
@@ -157,6 +162,42 @@
           await brazaApiCancelar();
           location.reload();
         }
+      });
+
+      if (customer.rol === 'admin' || customer.rol === 'superadmin') {
+        const nav = document.querySelector('.navlinks');
+        const a = document.createElement('a');
+        a.href = 'admin.html';
+        a.textContent = 'Panel admin';
+        a.className = 'hide-mobile';
+        nav.insertBefore(a, nav.firstChild);
+      }
+
+      const asistenteLog = document.getElementById('asistente-log');
+      function pintarAsistente(texto, quien) {
+        const div = document.createElement('div');
+        div.style.cssText = 'font-size:0.85rem;padding:8px 10px;border-radius:10px;' +
+          (quien === 'tu' ? 'background:rgba(255,90,46,0.12);align-self:flex-end;color:var(--text1);'
+                           : 'background:rgba(255,255,255,0.05);color:var(--text2);');
+        div.textContent = texto;
+        asistenteLog.appendChild(div);
+        asistenteLog.scrollTop = asistenteLog.scrollHeight;
+      }
+      document.getElementById('btn-asistente').addEventListener('click', async () => {
+        const input = document.getElementById('asistente-input');
+        const mensaje = input.value.trim();
+        if (!mensaje) return;
+        pintarAsistente(mensaje, 'tu');
+        input.value = '';
+        try {
+          const { respuesta } = await brazaApiAsistente(mensaje);
+          pintarAsistente(respuesta, 'bot');
+        } catch (err) {
+          pintarAsistente('Error: ' + err.message, 'bot');
+        }
+      });
+      document.getElementById('asistente-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('btn-asistente').click();
       });
       return;
     }

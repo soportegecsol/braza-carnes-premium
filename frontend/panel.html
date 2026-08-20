@@ -13,7 +13,8 @@
 
 <nav class="nav">
   <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
-  <div class="navlinks">
+  <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" type="button">☰</button>
+  <div class="navlinks" id="navlinks">
     <a href="index.html" class="hide-mobile">Inicio</a>
   </div>
 </nav>
@@ -77,12 +78,12 @@
         <h2 class="section-title" style="font-size:1.3rem;">Tus pedidos</h2>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <table class="orders">
+        <div class="table-scroll"><table class="orders">
           <thead>
             <tr><th>Pedido</th><th>Plan</th><th>Método de pago</th><th>Entrega</th><th>Valor</th></tr>
           </thead>
           <tbody id="orders-body"></tbody>
-        </table>
+        </table></div>
       </div>
     </section>
 

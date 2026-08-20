@@ -28,7 +28,8 @@
 
 <nav class="nav">
   <div class="brand"><a href="index.html"><span class="brand-mark">◆ BRAZA</span></a></div>
-  <div class="navlinks">
+  <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" type="button">☰</button>
+  <div class="navlinks" id="navlinks">
     <a href="panel.html" class="hide-mobile">Mi cuenta</a>
     <a href="index.html" class="hide-mobile">Inicio</a>
   </div>
@@ -59,10 +60,10 @@
         <h2 class="section-title" style="font-size:1.2rem;">Cortes y stock</h2>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <table class="admin-table">
+        <div class="table-scroll"><table class="admin-table">
           <thead><tr><th>Corte</th><th>SKU</th><th>Stock</th><th>Merma</th><th>Actualizado</th><th></th></tr></thead>
           <tbody id="inv-body"></tbody>
-        </table>
+        </table></div>
       </div>
     </section>
 
@@ -72,10 +73,10 @@
         <h2 class="section-title" style="font-size:1.2rem;">Cuentas registradas</h2>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <table class="admin-table">
+        <div class="table-scroll"><table class="admin-table">
           <thead><tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Rol</th><th>Desde</th></tr></thead>
           <tbody id="clientes-body"></tbody>
-        </table>
+        </table></div>
       </div>
     </section>
 
@@ -85,10 +86,10 @@
         <h2 class="section-title" style="font-size:1.2rem;">Todas las suscripciones</h2>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <table class="admin-table">
+        <div class="table-scroll"><table class="admin-table">
           <thead><tr><th>Cliente</th><th>Plan</th><th>Estado</th><th>Ciudad</th><th>Próxima entrega</th></tr></thead>
           <tbody id="sus-body"></tbody>
-        </table>
+        </table></div>
       </div>
     </section>
 
@@ -98,10 +99,10 @@
         <h2 class="section-title" style="font-size:1.2rem;">Todos los pedidos</h2>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <table class="admin-table">
+        <div class="table-scroll"><table class="admin-table">
           <thead><tr><th>Cliente</th><th>Plan</th><th>Método</th><th>Estado pago</th><th>Valor</th><th>Fecha</th></tr></thead>
           <tbody id="ped-body"></tbody>
-        </table>
+        </table></div>
       </div>
     </section>
 

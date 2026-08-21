@@ -77,7 +77,7 @@ function brazaGenOrderId() {
    que ya existía antes.
 
    Autenticación real: el backend usa un token de sesión
-   (Authorization: Bearer <token>) en vez de confiar en un
+   (Authorization: Bearer <token>) en vez-�de confiar en un
    customerId enviado por el navegador. El token se guarda en
    localStorage bajo BRAZA_TOKEN_KEY tras registro/login.
    ============================================================ */
@@ -271,3 +271,50 @@ async function brazaAdminPedidos() {
   if (!r.ok) throw new Error((await r.json()).error || "Sin permisos");
   return (await r.json()).pedidos;
 }
+
+/* ============================================================
+   Menú móvil (hamburguesa) — compartido en todas las páginas
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  const toggle = document.getElementById("navToggle");
+  const links = document.getElementById("navlinks");
+  if (!toggle || !links) return;
+  toggle.addEventListener("click", () => {
+    const open = links.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.textContent = open ? "✕" : "☰";
+  });
+  links.querySelectorAll("a").forEach((a) => {
+    a.addEventListener("click", () => {
+      links.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.textContent = "☰";
+    });
+  });
+});
+
+/* ============================================================
+   Scroll reveal — fade-up al entrar en viewport. Solo actúa
+   sobre elementos con clase .reveal (hoy: index.html). No
+   afecta páginas que no la usen.
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  const revealEls = document.querySelectorAll(".reveal");
+  if (!revealEls.length) return;
+  if (!("IntersectionObserver" in window)) {
+    revealEls.forEach((el) => el.classList.add("in"));
+    return;
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15 }
+  );
+  revealEls.forEach((el) => io.observe(el));
+});
